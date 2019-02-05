@@ -17,8 +17,8 @@ import * as http from 'http';
 import * as io from 'socket.io';
 import * as prometheus from 'socket.io-prometheus-metrics';
 
-server = http.createServer();
-io = io(server);
+const server = http.createServer();
+const io = io(server);
 
 prometheus.metrics(io);
 
