@@ -3,7 +3,19 @@
   "version": "1.0.0",
   "description": "Prometheus metrics for socket.io",
   "author": "Jonas Tranberg <jonas.tranberg@uniwise.dk>",
-  "license": "Apache 2.0",
+  "license": "Apache-2.0",
+  "keywords": [
+    "prometheus",
+    "socket.io",
+    "metrics"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UNIwise/socket.io-prometheus-metrics.git"
+  },
+  "bugs": {
+    "url": "https://github.com/UNIwise/socket.io-prometheus-metrics/issues"
+  },
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
