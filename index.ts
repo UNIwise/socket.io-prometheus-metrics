@@ -182,7 +182,7 @@ export class SocketIOMetrics {
                     }
                 }
 
-                return org_onevent.bind(socket, packet);
+                return org_onevent.call(socket, packet);
             };
         });
     }
