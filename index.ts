@@ -79,6 +79,9 @@ export class SocketIOMetrics {
         this.express = express();
         this.expressServer = this.express.listen(this.options.port);
         this.express.get(this.options.path, (req: express.Request, res: express.Response) => {
+            const engine: any = this.ioServer.engine;
+            this.metrics.connectedSockets.set(engine.clientsCount);
+            
             res.set('Content-Type', this.register.contentType);
             res.end(this.register.metrics());
         });
@@ -149,11 +152,9 @@ export class SocketIOMetrics {
         this.ioServer.on('connect', (socket: any) => {
             // Connect events
             this.metrics.connectTotal.inc();
-            this.metrics.connectedSockets.inc();
 
             // Disconnect events
             socket.on('disconnect', () => {
-                this.metrics.connectedSockets.dec();
                 this.metrics.disconnectTotal.inc();
             });
 
