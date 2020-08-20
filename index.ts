@@ -83,9 +83,6 @@ export class SocketIOMetrics {
         this.express = express();
         this.expressServer = this.express.listen(this.options.port);
         this.express.get(this.options.path, (req: express.Request, res: express.Response) => {
-            const engine: any = this.ioServer.engine;
-            this.metrics.connectedSockets.set(engine.clientsCount);
-
             res.set('Content-Type', this.register.contentType);
             res.end(this.register.metrics());
         });
@@ -159,12 +156,12 @@ export class SocketIOMetrics {
         server.on('connect', (socket: any) => {
             // Connect events
             this.metrics.connectTotal.inc(labels);
-            this.metrics.connectedSockets.set(this.ioServer.engine.clientsCount);
+            this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
 
             // Disconnect events
             socket.on('disconnect', () => {
                 this.metrics.disconnectTotal.inc(labels);
-                this.metrics.connectedSockets.set(this.ioServer.engine.clientsCount);
+                this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
             });
 
             // Hook into emit (outgoing event)
@@ -186,6 +183,7 @@ export class SocketIOMetrics {
                     const [event, data] = packet.data;
 
                     if (event === 'error') {
+                        this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
                         this.metrics.errorsTotal.inc(labels);
                     } else if (!blacklisted_events.has(event)) {
                         let labelsWithEvent = { event: event, ...labels };
