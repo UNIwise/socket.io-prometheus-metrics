@@ -159,10 +159,12 @@ export class SocketIOMetrics {
         server.on('connect', (socket: any) => {
             // Connect events
             this.metrics.connectTotal.inc(labels);
+            this.metrics.connectedSockets.set(this.ioServer.engine.clientsCount);
 
             // Disconnect events
             socket.on('disconnect', () => {
                 this.metrics.disconnectTotal.inc(labels);
+                this.metrics.connectedSockets.set(this.ioServer.engine.clientsCount);
             });
 
             // Hook into emit (outgoing event)
