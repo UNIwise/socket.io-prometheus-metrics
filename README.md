@@ -6,6 +6,8 @@ Exposes a metrics endpoint for prometheus to collect data about [`socket.io`](ht
 
 ```bash
 npm install socket.io-prometheus-metrics
+# or
+yarn add socket.io-prometheus-metrics
 ```
 
 ## Usage
