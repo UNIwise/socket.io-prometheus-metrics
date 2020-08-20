@@ -1,6 +1,6 @@
 {
   "name": "socket.io-prometheus-metrics",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Prometheus metrics for socket.io",
   "author": "Jonas Tranberg <jonas.tranberg@uniwise.dk>",
   "license": "Apache-2.0",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/express": "^4.16.1",
     "@types/node": "^10.12.21",
-    "@types/socket.io": "^2.1.2",
+    "@types/socket.io": "^2.1.11",
     "typescript": "^3.3.1"
   }
 }
