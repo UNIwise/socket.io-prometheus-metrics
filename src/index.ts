@@ -31,6 +31,14 @@ export interface IMetrics {
   errorsTotal: prom.Counter;
 }
 
+export const DefaultOptions: IMetricsOptions = {
+  port: 9090,
+  path: "/metrics",
+  createServer: true,
+  collectDefaultMetrics: false,
+  checkForNewNamespaces: true,
+};
+
 export class SocketIOMetrics {
   public server: http.Server | null;
   
@@ -43,16 +51,8 @@ export class SocketIOMetrics {
 
   private boundNamespaces = new Set();
 
-  private defaultOptions: IMetricsOptions = {
-    port: 9090,
-    path: "/metrics",
-    createServer: true,
-    collectDefaultMetrics: false,
-    checkForNewNamespaces: true,
-  };
-
   constructor(io: io.Server, options?: IMetricsOptions) {
-    this.options = { ...this.defaultOptions, ...options };
+    this.options = { ...DefaultOptions, ...options };
     
     this.ioServer = io;
     
