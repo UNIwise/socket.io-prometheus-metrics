@@ -65,9 +65,9 @@ const metrics = ioMetrics.register.metrics();
 | `socket_io_connect_total`         | Total count of socket.io connection requests | `namespace`          |
 | `socket_io_disconnect_total`      | Total count of socket.io disconnections      | `namespace`          |
 | `socket_io_errors_total`          | Total count of socket.io errors              | `namespace`          |
-| `socket_io_events_received_total` | Total count of socket.io recieved events     | `event`, `namespace` |
+| `socket_io_events_received_total` | Total count of socket.io received events     | `event`, `namespace` |
 | `socket_io_events_sent_total`     | Total count of socket.io sent events         | `event`, `namespace` |
-| `socket_io_recieve_bytes`         | Total socket.io bytes recieved               | `event`, `namespace` |
+| `socket_io_receive_bytes`         | Total socket.io bytes received               | `event`, `namespace` |
 | `socket_io_transmit_bytes`        | Total socket.io bytes transmitted            | `event`, `namespace` |
 
 ## Prometheus default metrics
