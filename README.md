@@ -68,7 +68,7 @@ If `createServer: false` then `scraper.server` is `null`.
 
 ## Socket.io metrics
 
-> all metrics have `socket_io_` prefix in their names.
+> all metrics have `socket_io_` as prefix in their names.
 
 | Name                        | Help                                         | Labels               |
 | --------------------------- | -------------------------------------------- | -------------------- |
