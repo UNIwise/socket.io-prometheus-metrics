@@ -3,6 +3,8 @@ import * as express from 'express';
 import * as io from 'socket.io';
 import * as prom from 'prom-client';
 
+import { Metrics } from './metrics';
+
 export function metrics(ioServer: io.Server, options?: IMetricsOptions) {
     return new SocketIOMetrics(ioServer, options);
 }
@@ -50,8 +52,8 @@ export class SocketIOMetrics {
         this.options = { ...this.defaultOptions, ...options };
         this.ioServer = ioServer;
         this.register = prom.register;
+        this.metrics = Metrics;
 
-        this.initMetrics();
         this.bindMetrics();
 
         if (this.options.collectDefaultMetrics) {
@@ -91,57 +93,6 @@ export class SocketIOMetrics {
     /*
     * Metrics logic
     */
-
-    private initMetrics() {
-        this.metrics = {
-            connectedSockets: new prom.Gauge({
-                name: 'socket_io_connected',
-                help: 'Number of currently connected sockets'
-            }),
-
-            connectTotal: new prom.Counter({
-                name: 'socket_io_connect_total',
-                help: 'Total count of socket.io connection requests',
-                labelNames: ['namespace']
-            }),
-
-            disconnectTotal: new prom.Counter({
-                name: 'socket_io_disconnect_total',
-                help: 'Total count of socket.io disconnections',
-                labelNames: ['namespace']
-            }),
-
-            eventsReceivedTotal: new prom.Counter({
-                name: 'socket_io_events_received_total',
-                help: 'Total count of socket.io received events',
-                labelNames: ['event', 'namespace']
-            }),
-
-            eventsSentTotal: new prom.Counter({
-                name: 'socket_io_events_sent_total',
-                help: 'Total count of socket.io sent events',
-                labelNames: ['event', 'namespace']
-            }),
-
-            bytesReceived: new prom.Counter({
-                name: 'socket_io_receive_bytes',
-                help: 'Total socket.io bytes received',
-                labelNames: ['event', 'namespace']
-            }),
-
-            bytesTransmitted: new prom.Counter({
-                name: 'socket_io_transmit_bytes',
-                help: 'Total socket.io bytes transmitted',
-                labelNames: ['event', 'namespace']
-            }),
-
-            errorsTotal: new prom.Counter({
-                name: 'socket_io_errors_total',
-                help: 'Total socket.io errors',
-                labelNames: ['namespace']
-            })
-        };
-    }
 
     private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: prom.labelValues) {
         const blacklisted_events = new Set([
