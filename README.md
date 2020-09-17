@@ -17,12 +17,12 @@ Basic usage
 ```ts
 import * as http from "http";
 import * as io from "socket.io";
-import * as prometheus from "socket.io-prometheus-metrics";
+import * as prom from "socket.io-prometheus-metrics";
 
 const server = http.createServer();
 const io = io(server);
 
-prometheus.metrics(io);
+prom.scrape(io);
 
 server.listen(3000);
 ```
@@ -32,7 +32,7 @@ Metrics is then available at `localhost:9090/metrics`.
 Prometheus default metrics can also be enabled by setting the `collectDefaultMetrics` option to `true`
 
 ```ts
-prometheus.metrics(io, {
+prom.scrape(io, {
   collectDefaultMetrics: true,
 });
 ```
@@ -40,12 +40,21 @@ prometheus.metrics(io, {
 If you wish to serve the metrics yourself the `createServer` options can be set to `false` and metrics can be collected from the register
 
 ```ts
-const ioMetrics = prometheus.metrics(io, {
+const scraper = prom.scrape(io, {
   createServer: false,
 });
 
-const metrics = ioMetrics.register.metrics();
+const metrics = scraper.getMetrics();
 ```
+
+If you at some point wish to stop and start the scraper server this can be done like this:
+
+```ts
+scraper.server.stop();
+scraper.server.start();
+```
+
+If `createServer: false` then `scraper.server` is `null`.
 
 ## Options
 

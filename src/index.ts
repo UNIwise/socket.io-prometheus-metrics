@@ -32,12 +32,12 @@ export interface IMetrics {
 }
 
 export class SocketIOMetrics {
-  public register: prom.Registry;
-  public metrics: IMetrics;
-
+  public server: http.Server | null;
+  
+  private register: prom.Registry;
+  private metrics: IMetrics;
   private ioServer: io.Server;
   private express: express.Express;
-  private expressServer: http.Server;
 
   private options: IMetricsOptions;
 
@@ -51,9 +51,11 @@ export class SocketIOMetrics {
     checkForNewNamespaces: true,
   };
 
-  constructor(ioServer: io.Server, options?: IMetricsOptions) {
+  constructor(io: io.Server, options?: IMetricsOptions) {
     this.options = { ...this.defaultOptions, ...options };
-    this.ioServer = ioServer;
+    
+    this.ioServer = io;
+    
     this.register = prom.register;
     this.metrics = Metrics;
 
@@ -66,7 +68,11 @@ export class SocketIOMetrics {
     }
 
     if (this.options.createServer) {
-      this.start();
+      if (!this.server || !this.server.listening) {
+        this.initServer();
+      }
+    } else {
+      this.server = null;
     }
   }
 
@@ -74,21 +80,9 @@ export class SocketIOMetrics {
    * Metrics Server
    */
 
-  public start(): void {
-    if (!this.expressServer || !this.expressServer.listening) {
-      this.initServer();
-    }
-  }
-
-  public async close(): Promise<void> {
-    return new Promise((resolve: () => void) => {
-      this.expressServer.close(resolve);
-    });
-  }
-
   private initServer() {
     this.express = express();
-    this.expressServer = this.express.listen(this.options.port);
+    this.server = this.express.listen(this.options.port);
     this.express.get(
       this.options.path,
       (req: express.Request, res: express.Response) => {
@@ -96,6 +90,10 @@ export class SocketIOMetrics {
         res.end(this.register.metrics());
       }
     );
+  }
+
+  public getMetrics(opts?: prom.MetricsOpts): string {
+    return this.register.metrics(opts);
   }
 
   /*
