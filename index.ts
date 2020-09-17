@@ -29,7 +29,7 @@ export interface IMetrics {
 export class SocketIOMetrics {
     public register: prom.Registry;
     public metrics: IMetrics;
-    
+
     private ioServer: io.Server;
     private express: express.Express;
     private expressServer: http.Server;
@@ -113,7 +113,7 @@ export class SocketIOMetrics {
 
             eventsReceivedTotal: new prom.Counter({
                 name: 'socket_io_events_received_total',
-                help: 'Total count of socket.io recieved events',
+                help: 'Total count of socket.io received events',
                 labelNames: ['event', 'namespace']
             }),
 
@@ -124,8 +124,8 @@ export class SocketIOMetrics {
             }),
 
             bytesReceived: new prom.Counter({
-                name: 'socket_io_recieve_bytes',
-                help: 'Total socket.io bytes recieved',
+                name: 'socket_io_receive_bytes',
+                help: 'Total socket.io bytes received',
                 labelNames: ['event', 'namespace']
             }),
 
