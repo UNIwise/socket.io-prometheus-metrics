@@ -20,6 +20,7 @@
   "typings": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "lint": "eslint .",
     "clean": "rm *.log ./dist ./node_modules -rf"
   },
   "dependencies": {
