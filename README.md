@@ -22,7 +22,7 @@ import * as prom from "socket.io-prometheus-metrics";
 const server = http.createServer();
 const io = io(server);
 
-prom.scrape(io);
+prom.collect(io);
 
 server.listen(3000);
 ```
@@ -32,7 +32,7 @@ Metrics is then available at `localhost:9090/metrics`.
 Prometheus default metrics can also be enabled by setting the `collectDefaultMetrics` option to `true`
 
 ```ts
-prom.scrape(io, {
+prom.collect(io, {
   collectDefaultMetrics: true,
 });
 ```
@@ -40,14 +40,12 @@ prom.scrape(io, {
 If you wish to serve the metrics yourself the `createServer` options can be set to `false` and metrics can be collected from the register
 
 ```ts
-const scraper = prom.scrape(io, {
+const collector = prom.collect(io, {
   createServer: false,
 });
 
-const metrics = scraper.getMetrics();
+const metrics = collector.getMetrics();
 ```
-
-If `createServer: false` then `scraper.server` is `null`.
 
 ## Options
 
@@ -90,7 +88,7 @@ You can disable this functionality by providing `checkForNewNamespaces` option w
 For example:
 
 ```ts
-prometheus.metrics(io, {
+prom.collect(io, {
   checkForNewNamespaces: false,
 });
 ```

@@ -5,7 +5,7 @@ import * as prom from "prom-client";
 
 import { Metrics } from "./metrics";
 
-export function metrics(
+export function collect(
   ioServer: io.Server,
   options?: IMetricsOptions
 ): SocketIOMetrics {
