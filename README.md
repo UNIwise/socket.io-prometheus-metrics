@@ -47,13 +47,6 @@ const scraper = prom.scrape(io, {
 const metrics = scraper.getMetrics();
 ```
 
-If you at some point wish to stop and start the scraper server this can be done like this:
-
-```ts
-scraper.server.stop();
-scraper.server.start();
-```
-
 If `createServer: false` then `scraper.server` is `null`.
 
 ## Options
