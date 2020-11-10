@@ -24,7 +24,7 @@ export interface IMetrics {
 export declare const DefaultOptions: IMetricsOptions;
 export declare class SocketIOMetrics {
     server: http.Server | null;
-    private register;
+    register: prom.Registry;
     private metrics;
     private ioServer;
     private express;

@@ -43,8 +43,8 @@ export const DefaultOptions: IMetricsOptions = {
 
 export class SocketIOMetrics {
   public server: http.Server | null;
-  
-  private register: prom.Registry;
+  public register: prom.Registry;
+
   private metrics: IMetrics;
   private ioServer: io.Server;
   private express: express.Express;
