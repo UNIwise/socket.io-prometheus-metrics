@@ -49,13 +49,14 @@ const metrics = collector.getMetrics();
 
 ## Options
 
-| Option                  | Default    | Description                                                  |
-| ----------------------- | ---------- | ------------------------------------------------------------ |
-| `path`                  | "/metrics" | Metrics path                                                 |
-| `port`                  | 9090       | Metrics port                                                 |
-| `createServer`          | true       | Auto create http server                                      |
-| `collectDefaultMetrics` | false      | Collect prometheus default metrics                           |
-| `checkForNewNamespaces` | true       | Collect metrics for namespaces that will be added at runtime |
+| Option                  | Default     | Description                                                  |
+| ----------------------- | ----------- | ------------------------------------------------------------ |
+| `path`                  | "/metrics"  | Metrics path                                                 |
+| `port`                  | 9090        | Metrics port                                                 |
+| `createServer`          | true        | Auto create http server                                      |
+| `collectDefaultMetrics` | false       | Collect prometheus default metrics                           |
+| `checkForNewNamespaces` | true        | Collect metrics for namespaces that will be added at runtime |
+| `prefix`                | 'socket_io' | Prefix for the property name exported to Prometheus          |
 
 ## Socket.io metrics
 

@@ -18,6 +18,7 @@ export interface IMetricsOptions {
   createServer?: boolean;
   collectDefaultMetrics?: boolean;
   checkForNewNamespaces?: boolean;
+  prefix?: string;
 }
 
 export interface IMetrics {
@@ -37,12 +38,13 @@ export const DefaultOptions: IMetricsOptions = {
   createServer: true,
   collectDefaultMetrics: false,
   checkForNewNamespaces: true,
+  prefix: 'socket_io'
 };
 
 export class SocketIOMetrics {
   public server: http.Server | null;
-  
-  private register: prom.Registry;
+  public register: prom.Registry;
+
   private metrics: IMetrics;
   private ioServer: io.Server;
   private express: express.Express;
@@ -57,7 +59,7 @@ export class SocketIOMetrics {
     this.ioServer = io;
     
     this.register = prom.register;
-    this.metrics = Metrics;
+    this.metrics = Metrics(this.options.prefix);
 
     this.bindMetrics();
 
