@@ -101,10 +101,10 @@ class SocketIOMetrics {
         this.boundNamespaces.add(namespace);
     }
     bindMetrics() {
-        Object.keys(this.ioServer.nsps).forEach((nsp) => this.bindNamespaceMetrics(this.ioServer, nsp));
+        Object.keys(this.ioServer._nsps).forEach((nsp) => this.bindNamespaceMetrics(this.ioServer, nsp));
         if (this.options.checkForNewNamespaces) {
             setInterval(() => {
-                Object.keys(this.ioServer.nsps).forEach((nsp) => this.bindNamespaceMetrics(this.ioServer, nsp));
+                Object.keys(this.ioServer._nsps).forEach((nsp) => this.bindNamespaceMetrics(this.ioServer, nsp));
             }, 2000);
         }
     }

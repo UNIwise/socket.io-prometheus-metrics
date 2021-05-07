@@ -181,13 +181,14 @@ export class SocketIOMetrics {
   }
 
   private bindMetrics() {
-    Object.keys(this.ioServer.nsps).forEach((nsp) =>
+    // Typing hack is for SocketIO 3+
+    Object.keys((this.ioServer as any)._nsps).forEach((nsp) =>
       this.bindNamespaceMetrics(this.ioServer, nsp)
     );
 
     if (this.options.checkForNewNamespaces) {
       setInterval(() => {
-        Object.keys(this.ioServer.nsps).forEach((nsp) =>
+        Object.keys((this.ioServer as any)._nsps).forEach((nsp) =>
           this.bindNamespaceMetrics(this.ioServer, nsp)
         );
       }, 2000);
