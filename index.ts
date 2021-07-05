@@ -2,6 +2,7 @@ import * as http from 'http';
 import * as express from 'express';
 import * as io from 'socket.io';
 import * as prom from 'prom-client';
+import type { LabelValues } from 'prom-client';
 
 export function metrics(ioServer: io.Server, options?: IMetricsOptions) {
     return new SocketIOMetrics(ioServer, options);
@@ -16,14 +17,14 @@ export interface IMetricsOptions {
 }
 
 export interface IMetrics {
-    connectedSockets: prom.Gauge;
-    connectTotal: prom.Counter;
-    disconnectTotal: prom.Counter;
-    eventsReceivedTotal: prom.Counter;
-    eventsSentTotal: prom.Counter;
-    bytesReceived: prom.Counter;
-    bytesTransmitted: prom.Counter;
-    errorsTotal: prom.Counter;
+    connectedSockets: prom.Gauge<any>;
+    connectTotal: prom.Counter<any>;
+    disconnectTotal: prom.Counter<any>;
+    eventsReceivedTotal: prom.Counter<any>;
+    eventsSentTotal: prom.Counter<any>;
+    bytesReceived: prom.Counter<any>;
+    bytesTransmitted: prom.Counter<any>;
+    errorsTotal: prom.Counter<any>;
 }
 
 export class SocketIOMetrics {
@@ -143,7 +144,7 @@ export class SocketIOMetrics {
         };
     }
 
-    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: prom.labelValues) {
+    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: LabelValues<string>) {
         const blacklisted_events = new Set([
             'error',
             'connect',
@@ -207,13 +208,13 @@ export class SocketIOMetrics {
     }
 
     private bindMetrics() {
-        Object.keys(this.ioServer.nsps).forEach((nsp) =>
+        Object.keys(this.ioServer._nsps).forEach((nsp) =>
             this.bindNamespaceMetrics(this.ioServer, nsp)
         );
 
         if (this.options.checkForNewNamespaces) {
             setInterval(() => {
-                Object.keys(this.ioServer.nsps).forEach((nsp) =>
+                Object.keys(this.ioServer._nsps).forEach((nsp) =>
                     this.bindNamespaceMetrics(this.ioServer, nsp)
                 );
             }, 2000);
