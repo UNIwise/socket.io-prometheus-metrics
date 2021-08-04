@@ -6,7 +6,8 @@
         "declaration": true,
         "module": "commonjs",
         "target": "es2015",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "skipLibCheck": true
     },
     "files": [
         "index.ts"
