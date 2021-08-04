@@ -2,6 +2,7 @@ import * as http from 'http';
 import * as express from 'express';
 import * as io from 'socket.io';
 import * as prom from 'prom-client';
+import type { LabelValues } from 'prom-client';
 
 export function metrics(ioServer: io.Server, options?: IMetricsOptions) {
     return new SocketIOMetrics(ioServer, options);
@@ -15,20 +16,20 @@ export interface IMetricsOptions {
     checkForNewNamespaces?: boolean
 }
 
-export interface IMetrics {
-    connectedSockets: prom.Gauge;
-    connectTotal: prom.Counter;
-    disconnectTotal: prom.Counter;
-    eventsReceivedTotal: prom.Counter;
-    eventsSentTotal: prom.Counter;
-    bytesReceived: prom.Counter;
-    bytesTransmitted: prom.Counter;
-    errorsTotal: prom.Counter;
+export interface IMetrics<T extends string> {
+    connectedSockets: prom.Gauge<T>;
+    connectTotal: prom.Counter<T>;
+    disconnectTotal: prom.Counter<T>;
+    eventsReceivedTotal: prom.Counter<T>;
+    eventsSentTotal: prom.Counter<T>;
+    bytesReceived: prom.Counter<T>;
+    bytesTransmitted: prom.Counter<T>;
+    errorsTotal: prom.Counter<T>;
 }
 
-export class SocketIOMetrics {
+export class SocketIOMetrics<T extends string> {
     public register: prom.Registry;
-    public metrics: IMetrics;
+    public metrics: IMetrics<T>;
 
     private ioServer: io.Server;
     private express: express.Express;
@@ -143,7 +144,7 @@ export class SocketIOMetrics {
         };
     }
 
-    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: prom.labelValues) {
+    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: LabelValues<string>) {
         const blacklisted_events = new Set([
             'error',
             'connect',
@@ -168,7 +169,7 @@ export class SocketIOMetrics {
             const org_emit = socket.emit;
             socket.emit = (event: string, ...data: any[]) => {
                 if (!blacklisted_events.has(event)) {
-                    let labelsWithEvent = { event: event, ...labels };
+                    let labelsWithEvent: LabelValues<string> = { event: event, ...labels };
                     this.metrics.bytesTransmitted.inc(labelsWithEvent, this.dataToBytes(data));
                     this.metrics.eventsSentTotal.inc(labelsWithEvent);
                 }
@@ -186,7 +187,7 @@ export class SocketIOMetrics {
                         this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
                         this.metrics.errorsTotal.inc(labels);
                     } else if (!blacklisted_events.has(event)) {
-                        let labelsWithEvent = { event: event, ...labels };
+                        let labelsWithEvent: LabelValues<string> = { event: event, ...labels };
                         this.metrics.bytesReceived.inc(labelsWithEvent, this.dataToBytes(data));
                         this.metrics.eventsReceivedTotal.inc(labelsWithEvent);
                     }
@@ -207,17 +208,11 @@ export class SocketIOMetrics {
     }
 
     private bindMetrics() {
-        Object.keys(this.ioServer.nsps).forEach((nsp) =>
-            this.bindNamespaceMetrics(this.ioServer, nsp)
-        );
+        this.bindNamespaces();
 
-        if (this.options.checkForNewNamespaces) {
-            setInterval(() => {
-                Object.keys(this.ioServer.nsps).forEach((nsp) =>
-                    this.bindNamespaceMetrics(this.ioServer, nsp)
-                );
-            }, 2000);
-        }
+        setInterval(() => {
+            this.bindNamespaces();
+        }, 2000);
     }
 
     /*
@@ -229,6 +224,12 @@ export class SocketIOMetrics {
             return Buffer.byteLength((typeof data === 'string') ? data : JSON.stringify(data) || '', 'utf8');
         } catch (e) {
             return 0;
+        }
+    }
+
+    private bindNamespaces() {
+        for (const nsp of Object.keys((this.ioServer as any).nsps ?? {})) {
+            this.bindNamespaceMetrics(this.ioServer, nsp);
         }
     }
 }
