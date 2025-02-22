@@ -49,7 +49,7 @@ export class SocketIOMetrics {
     constructor(ioServer: io.Server, options?: IMetricsOptions) {
         this.options = { ...this.defaultOptions, ...options };
         this.ioServer = ioServer;
-        this.register = prom.register;
+        this.register = new prom.Registry();
 
         this.initMetrics();
         this.bindMetrics();
@@ -82,9 +82,14 @@ export class SocketIOMetrics {
     private initServer() {
         this.express = express();
         this.expressServer = this.express.listen(this.options.port);
-        this.express.get(this.options.path, (req: express.Request, res: express.Response) => {
-            res.set('Content-Type', this.register.contentType);
-            res.end(this.register.metrics());
+        this.express.get(this.options.path, async (_req: express.Request, res: express.Response) => {
+            try {
+                const metrics = await this.register.metrics(); // Await the Promise
+                res.set('Content-Type', this.register.contentType);
+                res.end(metrics); // metrics is now a string
+            } catch (error) {
+                res.status(500).end('Error collecting metrics');
+            }
         });
     }
 
@@ -143,7 +148,7 @@ export class SocketIOMetrics {
         };
     }
 
-    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: prom.labelValues) {
+    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: Record<string,string>) {
         const blacklisted_events = new Set([
             'error',
             'connect',
@@ -207,13 +212,13 @@ export class SocketIOMetrics {
     }
 
     private bindMetrics() {
-        Object.keys(this.ioServer.nsps).forEach((nsp) =>
+        Object.keys(this.ioServer._nsps).forEach((nsp) =>
             this.bindNamespaceMetrics(this.ioServer, nsp)
         );
 
         if (this.options.checkForNewNamespaces) {
             setInterval(() => {
-                Object.keys(this.ioServer.nsps).forEach((nsp) =>
+                Object.keys(this.ioServer._nsps).forEach((nsp) =>
                     this.bindNamespaceMetrics(this.ioServer, nsp)
                 );
             }, 2000);
