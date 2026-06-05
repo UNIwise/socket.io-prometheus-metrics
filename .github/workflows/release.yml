@@ -14,14 +14,20 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@uniwise'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -29,7 +35,7 @@ jobs:
       - name: Build
         run: yarn build
 
-      - name: Publish to npm
+      - name: Publish to GitHub Packages
         run: |
           IS_PRE="${{ github.event.release.prerelease || inputs.prerelease }}"
           if [[ "$IS_PRE" == "true" ]]; then
@@ -38,4 +44,4 @@ jobs:
             npm publish
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
