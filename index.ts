@@ -81,8 +81,8 @@ export class SocketIOMetrics {
 
     private initServer() {
         this.express = express();
-        this.expressServer = this.express.listen(this.options.port!);
-        this.express.get(this.options.path!, async (_req: express.Request, res: express.Response) => {
+        this.expressServer = this.express.listen(this.options.port ?? this.defaultOptions.port);
+        this.express.get(this.options.path ?? this.defaultOptions.path!, async (_req: express.Request, res: express.Response) => {
             res.set('Content-Type', this.register.contentType);
             res.end(await this.register.metrics());
         });
@@ -197,9 +197,12 @@ export class SocketIOMetrics {
     }
 
     private bindMetrics() {
-        (this.ioServer as any)._nsps.forEach((_: any, name: string) =>
-            this.bindNamespaceMetrics(name)
-        );
+        const nsps = (this.ioServer as any)._nsps;
+        if (nsps instanceof Map) {
+            nsps.forEach((_: any, name: string) => this.bindNamespaceMetrics(name));
+        } else {
+            this.bindNamespaceMetrics('/');
+        }
 
         if (this.options.checkForNewNamespaces) {
             this.ioServer.on('new_namespace', (namespace: any) => {
