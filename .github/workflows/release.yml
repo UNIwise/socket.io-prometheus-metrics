@@ -3,6 +3,13 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Publish as pre-release (next tag)'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
   publish:
@@ -24,7 +31,8 @@ jobs:
 
       - name: Publish to npm
         run: |
-          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+          IS_PRE="${{ github.event.release.prerelease || inputs.prerelease }}"
+          if [[ "$IS_PRE" == "true" ]]; then
             npm publish --tag next
           else
             npm publish
