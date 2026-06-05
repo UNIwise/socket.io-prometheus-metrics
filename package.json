@@ -1,5 +1,5 @@
 {
-  "name": "socket.io-prometheus-metrics",
+  "name": "@uniwise/socket.io-prometheus-metrics",
   "version": "2.0.0",
   "description": "Prometheus metrics for socket.io",
   "author": "Jonas Tranberg <jonas.tranberg@uniwise.dk>",
