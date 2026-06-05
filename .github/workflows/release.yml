@@ -45,6 +45,12 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Set version from release tag
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.ref }}"
+          VERSION="${TAG#v}"
+          npm version "$VERSION" --no-git-tag-version
+
       - name: Publish to GitHub Packages
         run: |
           IS_PRE="${{ github.event.release.prerelease || inputs.prerelease }}"

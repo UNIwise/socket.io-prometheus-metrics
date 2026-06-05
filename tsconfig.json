@@ -6,7 +6,10 @@
         "declaration": true,
         "module": "commonjs",
         "target": "es2015",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "esModuleInterop": true,
+        "strictPropertyInitialization": false,
+        "skipLibCheck": true
     },
     "files": [
         "index.ts"

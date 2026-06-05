@@ -1,9 +1,9 @@
 import * as http from 'http';
-import * as express from 'express';
-import * as io from 'socket.io';
+import express from 'express';
+import { Server, Socket } from 'socket.io';
 import * as prom from 'prom-client';
 
-export function metrics(ioServer: io.Server, options?: IMetricsOptions) {
+export function metrics(ioServer: Server, options?: IMetricsOptions) {
     return new SocketIOMetrics(ioServer, options);
 }
 
@@ -28,15 +28,15 @@ export interface IMetrics {
 
 export class SocketIOMetrics {
     public register: prom.Registry;
-    public metrics: IMetrics;
+    public metrics!: IMetrics;
 
-    private ioServer: io.Server;
+    private ioServer: Server;
     private express: express.Express;
     private expressServer: http.Server;
 
     private options: IMetricsOptions;
 
-    private boundNamespaces = new Set();
+    private boundNamespaces = new Set<string>();
 
     private defaultOptions: IMetricsOptions = {
         port: 9090,
@@ -46,7 +46,7 @@ export class SocketIOMetrics {
         checkForNewNamespaces: true
     };
 
-    constructor(ioServer: io.Server, options?: IMetricsOptions) {
+    constructor(ioServer: Server, options?: IMetricsOptions) {
         this.options = { ...this.defaultOptions, ...options };
         this.ioServer = ioServer;
         this.register = prom.register;
@@ -81,10 +81,10 @@ export class SocketIOMetrics {
 
     private initServer() {
         this.express = express();
-        this.expressServer = this.express.listen(this.options.port);
-        this.express.get(this.options.path, (req: express.Request, res: express.Response) => {
+        this.expressServer = this.express.listen(this.options.port ?? this.defaultOptions.port);
+        this.express.get(this.options.path ?? this.defaultOptions.path!, async (_req: express.Request, res: express.Response) => {
             res.set('Content-Type', this.register.contentType);
-            res.end(this.register.metrics());
+            res.end(await this.register.metrics());
         });
     }
 
@@ -143,7 +143,7 @@ export class SocketIOMetrics {
         };
     }
 
-    private bindMetricsOnEmitter(server: NodeJS.EventEmitter, labels: prom.labelValues) {
+    private bindMetricsOnNamespace(namespaceName: string) {
         const blacklisted_events = new Set([
             'error',
             'connect',
@@ -153,7 +153,10 @@ export class SocketIOMetrics {
             'removeListener'
         ]);
 
-        server.on('connect', (socket: any) => {
+        const labels = { namespace: namespaceName };
+        const namespaceServer = this.ioServer.of(namespaceName);
+
+        namespaceServer.on('connect', (socket: Socket) => {
             // Connect events
             this.metrics.connectTotal.inc(labels);
             this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
@@ -164,59 +167,47 @@ export class SocketIOMetrics {
                 this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
             });
 
-            // Hook into emit (outgoing event)
-            const org_emit = socket.emit;
-            socket.emit = (event: string, ...data: any[]) => {
+            socket.onAnyOutgoing((event: string, ...data: any[]) => {
                 if (!blacklisted_events.has(event)) {
-                    let labelsWithEvent = { event: event, ...labels };
+                    const labelsWithEvent = { event, ...labels };
                     this.metrics.bytesTransmitted.inc(labelsWithEvent, this.dataToBytes(data));
                     this.metrics.eventsSentTotal.inc(labelsWithEvent);
                 }
+            });
 
-                return org_emit.apply(socket, [event, ...data]);
-            };
-
-            // Hook into onevent (incoming event)
-            const org_onevent = socket.onevent;
-            socket.onevent = (packet: any) => {
-                if (packet && packet.data) {
-                    const [event, data] = packet.data;
-
-                    if (event === 'error') {
-                        this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
-                        this.metrics.errorsTotal.inc(labels);
-                    } else if (!blacklisted_events.has(event)) {
-                        let labelsWithEvent = { event: event, ...labels };
-                        this.metrics.bytesReceived.inc(labelsWithEvent, this.dataToBytes(data));
-                        this.metrics.eventsReceivedTotal.inc(labelsWithEvent);
-                    }
+            socket.onAny((event: string, ...data: any[]) => {
+                if (event === 'error') {
+                    this.metrics.connectedSockets.set((this.ioServer.engine as any).clientsCount);
+                    this.metrics.errorsTotal.inc(labels);
+                } else if (!blacklisted_events.has(event)) {
+                    const labelsWithEvent = { event, ...labels };
+                    this.metrics.bytesReceived.inc(labelsWithEvent, this.dataToBytes(data));
+                    this.metrics.eventsReceivedTotal.inc(labelsWithEvent);
                 }
-
-                return org_onevent.call(socket, packet);
-            };
+            });
         });
     }
 
-    private bindNamespaceMetrics(server: io.Server, namespace: string) {
-        if (this.boundNamespaces.has(namespace)) {
+    private bindNamespaceMetrics(namespaceName: string) {
+        if (this.boundNamespaces.has(namespaceName)) {
             return;
         }
-        const namespaceServer = server.of(namespace);
-        this.bindMetricsOnEmitter(namespaceServer, { namespace: namespace });
-        this.boundNamespaces.add(namespace);
+        this.bindMetricsOnNamespace(namespaceName);
+        this.boundNamespaces.add(namespaceName);
     }
 
     private bindMetrics() {
-        Object.keys(this.ioServer.nsps).forEach((nsp) =>
-            this.bindNamespaceMetrics(this.ioServer, nsp)
-        );
+        const nsps = (this.ioServer as any)._nsps;
+        if (nsps instanceof Map) {
+            nsps.forEach((_: any, name: string) => this.bindNamespaceMetrics(name));
+        } else {
+            this.bindNamespaceMetrics('/');
+        }
 
         if (this.options.checkForNewNamespaces) {
-            setInterval(() => {
-                Object.keys(this.ioServer.nsps).forEach((nsp) =>
-                    this.bindNamespaceMetrics(this.ioServer, nsp)
-                );
-            }, 2000);
+            this.ioServer.on('new_namespace', (namespace: any) => {
+                this.bindNamespaceMetrics(namespace.name);
+            });
         }
     }
 
